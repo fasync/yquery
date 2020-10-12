@@ -2,7 +2,7 @@
 
 # BSD 2-Clause License
 
-# Copyright (c) 2020, Florian
+# Copyright (c) 2020, Florian Büstgens
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -63,14 +63,6 @@ class Youtube:
                 if result['id']['kind'] == 'youtube#playlist':
                     self.playlists.append('%s [%s]' % (result['snippet']['title'], result['id']['playlistId']))
 
-        # if videos:
-        #     print('Videos:\n', '\n'.join(self.videos), '\n')
-        #     print('\n', list(self.videos)[0])
-        # if channels:
-        #     print('Channels:\n', '\n'.join(self.channels), '\n')
-        # if playlists:
-        #     print('Playlists:\n', '\n'.join(self.playlists), '\n')
-
     def __rawInput(self):
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
@@ -82,11 +74,16 @@ class Youtube:
         return ch
 
     def __printPretty(self, iterator):
-        print('Videos:\n', '\n'.join(list(self.videos)[:iterator]))
-        print('---------------------------------------------------------------------------------------')
-        print('-> ', list(self.videos)[iterator])
-        print('---------------------------------------------------------------------------------------')
-        print('\n'.join(list(self.videos)[(iterator + 1):]))
+        if videos:
+            print('Videos:\n', '\n'.join(list(self.videos)[:iterator]))
+            print('---------------------------------------------------------------------------------------')
+            print('-> ', list(self.videos)[iterator])
+            print('---------------------------------------------------------------------------------------')
+            print('\n'.join(list(self.videos)[(iterator + 1):]))
+        if channels:
+            print('Channels:\n', '\n'.join(self.channels), '\n')
+        if playlists:
+            print('Playlists:\n', '\n'.join(self.playlists), '\n')
         
     def choose(self):
         stay = True
@@ -110,6 +107,11 @@ class Youtube:
                 system('clear')
                 print('Loading ' + list(self.videos)[iterator] + ' ...')
                 system('mpv ' + self.ytprefix + self.videos[list(self.videos)[iterator]])
+
+            elif keypress == 'd':
+                system('clear')
+                print('Downloading ' + list(self.videos)[iterator] + ' ...')
+                system('youtube-dl -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4')
                 
             elif keypress == 'q' or keypress == 'h':
                 stay = False
@@ -197,5 +199,6 @@ if __name__ == '__main__':
         yt = Youtube()
         try:
             yt.search(args.query, args.number, args.videos, args.channels, args.playlists)
+            yt.choose()
         except(HttpError, e):
             print('An HTTP error %d occurred:\n%s' % (e.resp.status, e.content))
