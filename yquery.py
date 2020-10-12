@@ -76,7 +76,7 @@ class Youtube:
         old_settings = termios.tcgetattr(fd)
         try:
             tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(3)
+            ch = sys.stdin.read(1)
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
@@ -84,7 +84,7 @@ class Youtube:
     def __printPretty(self, iterator):
         print('Videos:\n', '\n'.join(list(self.videos)[:iterator]))
         print('---------------------------------------------------------------------------------------')
-        print(list(self.videos)[iterator])
+        print('-> ', list(self.videos)[iterator])
         print('---------------------------------------------------------------------------------------')
         print('\n'.join(list(self.videos)[(iterator + 1):]))
         
@@ -96,25 +96,23 @@ class Youtube:
             self.__printPretty(iterator)
             keypress = self.__rawInput()
             
-            if keypress == '\x1b[A':
+            if keypress == 'k':
                 if iterator > 0:
                     iterator-=1
                 self.__printPretty(iterator)
                 
-            elif keypress == '\x1b[B':
+            elif keypress == 'j':
                 if iterator + 1 < len(self.videos):
                     iterator+=1
                 self.__printPretty(iterator)
 
-            elif keypress == '\x1b[C':
+            elif keypress == 'l':
                 system('clear')
                 print('Loading ' + list(self.videos)[iterator] + ' ...')
                 system('mpv ' + self.ytprefix + self.videos[list(self.videos)[iterator]])
                 
-            else:
-                q = input('Press q to quit...')
-                if q == 'q':
-                    stay = False
+            elif keypress == 'q' || keypress == 'h':
+                stay = False
         
 
 class Menu:
