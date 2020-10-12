@@ -26,11 +26,13 @@ After starting a query, the results will be listed. No you can use H J K L for n
 
 `h` or `q` will get you back to the query menu.
 `j` and `k` will navigate down and up
-`l` will load the marked video.
+`l` will play the marked video.
+`d` will download the marked video.
 
 ### TODO
 I plan to implement the following features:
 
+```
 [x] Play
 [x] Download
 [ ] Autoplay
@@ -39,3 +41,4 @@ I plan to implement the following features:
 [ ] OAuth
 [?] Maybe command completion
 [?] Maybe something different than a index based menu, something more modern
+```
