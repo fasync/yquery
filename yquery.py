@@ -128,12 +128,6 @@ class Menu:
 
         self.main_menu()
 
-    def parse_bool(self,res):
-        if(res.lower() in ['true', '1', 't', 'y', 'yes']):
-            return True
-        else:
-            return False
-
     def main_menu(self):
         while self.stay:
             system('clear')
@@ -164,13 +158,13 @@ class Menu:
                 self.maxResults = input("maxResults? > ")
 
             elif c == "2":
-                self.show_videos = self.parse_bool(input("search videos? > "))
+                self.show_videos = !self.show_videos
 
             elif c == "3":
-                self.show_channels = self.parse_bool(input("search channels? > "))
+                self.show_channels = !self.show_channels
 
             elif c == "4":
-                self.show_playlists = self.parse_bool(input("search playlists? > "))
+                self.show_playlists = !self.show_playlists
                 
             elif c == "5":
                 return
