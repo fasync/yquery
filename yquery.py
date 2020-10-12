@@ -111,7 +111,7 @@ class Youtube:
                 print('Loading ' + list(self.videos)[iterator] + ' ...')
                 system('mpv ' + self.ytprefix + self.videos[list(self.videos)[iterator]])
                 
-            elif keypress == 'q' || keypress == 'h':
+            elif keypress == 'q' or keypress == 'h':
                 stay = False
         
 
