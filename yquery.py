@@ -1,7 +1,33 @@
 #!/usr/local/bin/python3.7
 
+# BSD 2-Clause License
+
+# Copyright (c) 2020, Florian
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from os import system
-import argparse
+import argparse, sys, tty, termios
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -10,20 +36,24 @@ APIKEY = open("./api.key", "r").read()
 
 class Youtube:
     def __init__(self):
-        self.videos = []
+        self.api = build('youtube', 'v3', developerKey=APIKEY)
+        self.ytprefix = "https://www.youtube.com/watch?v="
+        self.videos = {}
         self.channels = []
         self.playlists = []
     
     def search(self, search_string, mres=20, videos=True, channels=False, playlists=False):
-        api = build('youtube', 'v3', developerKey=APIKEY)
-
         # starting query
-        query_result = api.search().list(q=search_string, part='id,snippet', maxResults=mres).execute()
+        query_result = self.api.search().list(q=search_string, part='id,snippet', maxResults=mres).execute()
+
+        self.videos = {}
+        self.channels = []
+        self.playlists = []
 
         for result in query_result.get('items', []):
             if videos:
                 if result['id']['kind'] == 'youtube#video':
-                    self.videos.append('%s [%s]' % (result['snippet']['title'], result['id']['videoId']))
+                    self.videos[result['snippet']['title']] = result['id']['videoId']
                     
             if channels:
                 if result['id']['kind'] == 'youtube#channel':
@@ -33,18 +63,65 @@ class Youtube:
                 if result['id']['kind'] == 'youtube#playlist':
                     self.playlists.append('%s [%s]' % (result['snippet']['title'], result['id']['playlistId']))
 
-        if videos:
-            print('Videos:\n', '\n'.join(self.videos), '\n')
-        if channels:
-            print('Channels:\n', '\n'.join(self.channels), '\n')
-        if playlists:
-            print('Playlists:\n', '\n'.join(self.playlists), '\n')
+        # if videos:
+        #     print('Videos:\n', '\n'.join(self.videos), '\n')
+        #     print('\n', list(self.videos)[0])
+        # if channels:
+        #     print('Channels:\n', '\n'.join(self.channels), '\n')
+        # if playlists:
+        #     print('Playlists:\n', '\n'.join(self.playlists), '\n')
+
+    def __rawInput(self):
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(3)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+    def __printPretty(self, iterator):
+        print('Videos:\n', '\n'.join(list(self.videos)[:iterator]))
+        print('---------------------------------------------------------------------------------------')
+        print(list(self.videos)[iterator])
+        print('---------------------------------------------------------------------------------------')
+        print('\n'.join(list(self.videos)[(iterator + 1):]))
+        
+    def choose(self):
+        stay = True
+        iterator = 0
+        while stay:
+            system('clear')
+            self.__printPretty(iterator)
+            keypress = self.__rawInput()
+            
+            if keypress == '\x1b[A':
+                if iterator > 0:
+                    iterator-=1
+                self.__printPretty(iterator)
+                
+            elif keypress == '\x1b[B':
+                if iterator + 1 < len(self.videos):
+                    iterator+=1
+                self.__printPretty(iterator)
+
+            elif keypress == '\x1b[C':
+                system('clear')
+                print('Loading ' + list(self.videos)[iterator] + ' ...')
+                system('mpv ' + self.ytprefix + self.videos[list(self.videos)[iterator]])
+                
+            else:
+                q = input('Press q to quit...')
+                if q == 'q':
+                    stay = False
+        
 
 class Menu:
     def __init__(self):
         self.yt = Youtube()
         self.stay = True
-        self.maxResults = '20'
+        self.maxResults = '100'
         self.show_videos = True
         self.show_channels = False
         self.show_playlists = False
@@ -81,7 +158,7 @@ class Menu:
             if c == "0":
                 search_string = input("Search? > ")
                 self.yt.search(search_string, self.maxResults, self.show_videos, self.show_channels, self.show_playlists)
-                input("Press Enter to continue...")
+                self.yt.choose()
                 
             elif c == "1":
                 self.maxResults = input("maxResults? > ")
@@ -96,7 +173,7 @@ class Menu:
                 self.show_playlists = self.parse_bool(input("search playlists? > "))
                 
             elif c == "5":
-                self.main_menu()
+                return
                 
             elif c == "6":
                 self.stay = False
@@ -108,10 +185,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--interactive', help='Start yquery with a interactive menu.', action="store_true")
     parser.add_argument('-q', '--query', help='Query for Videos, Channels or Playlists.')
-    parser.add_argument('-n', '--number', help='Query for Videos, Channels or Playlists.')
-    parser.add_argument('-v', '--videos', help='Query for Videos, Channels or Playlists.')
-    parser.add_argument('-c', '--channels', help='Query for Videos, Channels or Playlists.')
-    parser.add_argument('-p', '--playlists', help='Query for Videos, Channels or Playlists.')
+    parser.add_argument('-n', '--number', help='Maximum number of search results.')
+    parser.add_argument('-v', '--videos', help='Search for videos?', action="store_true")
+    parser.add_argument('-c', '--channels', help='Search for channels?', action="store_true")
+    parser.add_argument('-p', '--playlists', help='Search for playlists?', action="store_true")
 
     args = parser.parse_args()
 
@@ -121,6 +198,6 @@ if __name__ == '__main__':
     else:
         yt = Youtube()
         try:
-            yt.search(args.query)
+            yt.search(args.query, args.number, args.videos, args.channels, args.playlists)
         except(HttpError, e):
             print('An HTTP error %d occurred:\n%s' % (e.resp.status, e.content))
