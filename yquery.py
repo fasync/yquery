@@ -74,15 +74,15 @@ class Youtube:
         return ch
 
     def __printPretty(self, iterator):
-        if videos:
+        if self.videos:
             print('Videos:\n', '\n'.join(list(self.videos)[:iterator]))
             print('---------------------------------------------------------------------------------------')
             print('-> ', list(self.videos)[iterator])
             print('---------------------------------------------------------------------------------------')
             print('\n'.join(list(self.videos)[(iterator + 1):]))
-        if channels:
+        if self.channels:
             print('Channels:\n', '\n'.join(self.channels), '\n')
-        if playlists:
+        if self.playlists:
             print('Playlists:\n', '\n'.join(self.playlists), '\n')
         
     def choose(self):
@@ -158,13 +158,13 @@ class Menu:
                 self.maxResults = input("maxResults? > ")
 
             elif c == "2":
-                self.show_videos = !self.show_videos
+                self.show_videos = not self.show_videos
 
             elif c == "3":
-                self.show_channels = !self.show_channels
+                self.show_channels = not self.show_channels
 
             elif c == "4":
-                self.show_playlists = !self.show_playlists
+                self.show_playlists = not self.show_playlists
                 
             elif c == "5":
                 return
