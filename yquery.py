@@ -113,7 +113,7 @@ class Youtube:
                 print('Downloading ' + list(self.videos)[iterator] + ' ...')
                 system('youtube-dl -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4')
 
-            elif keypress == 'm':
+            elif keypress == 'a':
                 system('clear')
                 print('Loading audio track of ' + list(self.videos)[iterator] + ' ...')
                 system('mpv --no-video ' + self.ytprefix + self.videos[list(self.videos)[iterator]])
