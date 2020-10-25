@@ -112,6 +112,11 @@ class Youtube:
                 system('clear')
                 print('Downloading ' + list(self.videos)[iterator] + ' ...')
                 system('youtube-dl -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4')
+
+            elif keypress == 'm':
+                system('clear')
+                print('Loading audio track of ' + list(self.videos)[iterator] + ' ...')
+                system('mpv --no-video ' + self.ytprefix + self.videos[list(self.videos)[iterator]])
                 
             elif keypress == 'q' or keypress == 'h':
                 stay = False
